@@ -8,8 +8,8 @@ public class Pathfinding : MonoBehaviour
     {
         if (startTile == null || targetTile == null)
         {
-            Debug.LogError("❌ Error: Start Tile or Target Tile is NULL!");
-            return new List<Tile>();
+            Debug.LogError("❌ Error: Start or Target Tile is NULL!");
+            return new List<Tile>(); // Return empty list to avoid crash
         }
 
         List<Tile> openList = new List<Tile>();
@@ -37,19 +37,7 @@ public class Pathfinding : MonoBehaviour
 
             foreach (Tile neighbor in GetNeighbors(currentTile, allTiles))
             {
-                if (neighbor == null)
-                {
-                    Debug.LogError($"❌ Error: Neighbor is NULL at ({currentTile.x}, {currentTile.y})");
-                    continue;
-                }
-
-                if (neighbor.isObstacle) // Prevents from walking through obstacles
-                {
-                    Debug.Log($"🚫 Skipping obstacle at ({neighbor.x}, {neighbor.y})");
-                    continue;
-                }
-
-                if (closedList.Contains(neighbor))
+                if (neighbor == null || neighbor.isObstacle || closedList.Contains(neighbor))
                     continue;
 
                 if (!openList.Contains(neighbor))
@@ -58,12 +46,12 @@ public class Pathfinding : MonoBehaviour
                     openList.Add(neighbor);
                 }
             }
-
         }
 
-        Debug.LogError("❌ Error: No Path Found!");
-        return new List<Tile>();
+        Debug.Log("🚫 No path found!");
+        return new List<Tile>(); // Return empty list instead of crashing
     }
+
 
 
     private static List<Tile> GetNeighbors(Tile tile, List<Tile> allTiles)

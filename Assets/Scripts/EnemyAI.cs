@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EnemyAI : MonoBehaviour
 {
-    public float moveSpeed = 3f;
+    public float moveSpeed = 2f;
     private bool isMoving = false;
     private List<Tile> currentPath = new List<Tile>();
     private Transform player;
@@ -30,7 +30,7 @@ public class EnemyAI : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(1.5f); // Wait before moving
+            yield return new WaitForSeconds(1.0f); // Wait before moving
 
             if (!isMoving && player != null)
             {
@@ -57,48 +57,68 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
+        // Find a path but remove the last tile (so enemy stops before reaching player)
         currentPath = Pathfinding.FindPath(startTile, playerTile, allTiles);
 
         if (currentPath.Count > 1)
         {
-            Debug.Log($"✅ Enemy AI: Found path! Moving from ({startTile.x},{startTile.y}) to ({playerTile.x},{playerTile.y})");
+            currentPath.RemoveAt(currentPath.Count - 1); // Remove last step to avoid moving onto player's tile
+            Debug.Log($"✅ Enemy AI: Moving toward player but stopping at ({currentPath[currentPath.Count - 1].x}, {currentPath[currentPath.Count - 1].y})");
             StartCoroutine(FollowPath());
         }
         else
         {
-            Debug.Log("❌ Enemy AI: No valid path found!");
+            Debug.Log("🚫 No valid path found!");
         }
     }
+
 
     IEnumerator FollowPath()
     {
         if (currentPath == null || currentPath.Count == 0)
         {
-            Debug.Log("❌ Enemy AI: No path to follow!");
+            Debug.Log("🚫 Enemy AI: No path to follow!");
             yield break;
         }
 
         isMoving = true;
-        animator?.SetFloat("Speed", 5f); 
+        animator?.SetBool("Moving", true); 
 
-        for (int i = 0; i < Mathf.Min(2, currentPath.Count); i++) // Move up to 2 tiles
+        for (int i = 0; i < Mathf.Min(2, currentPath.Count); i++) 
         {
             Tile tile = currentPath[i];
 
-            // Rotate towards movement direction
+            // ✅ Rotate towards movement direction
             Vector3 direction = (tile.transform.position - transform.position).normalized;
             if (direction != Vector3.zero)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.8f);
+                while (Quaternion.Angle(transform.rotation, targetRotation) > 0.5f)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+                    yield return null;
+                }
             }
 
-            transform.position = tile.transform.position;
-            yield return new WaitForSeconds(0.2f);
+            // ✅ Smooth movement using MoveTowards()
+            Vector3 startPosition = transform.position;
+            Vector3 endPosition = tile.transform.position;
+            float moveDuration = 0.5f;
+            float elapsedTime = 0f;
+
+            while (elapsedTime < moveDuration)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, endPosition, Time.deltaTime * 5f);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            transform.position = endPosition; // Ensure exact position
         }
 
-        animator?.SetFloat("Speed", 0f);
         isMoving = false;
+        animator?.SetBool("Moving", false);
     }
+
 
 }

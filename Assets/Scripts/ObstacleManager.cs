@@ -21,7 +21,6 @@ public class ObstacleManager : MonoBehaviour
         SpawnEnemy();
     }
 
-
     void GenerateObstacles()
     {
         Debug.Log("Generating Obstacles...");
@@ -33,15 +32,15 @@ public class ObstacleManager : MonoBehaviour
             for (int x = 0; x < 10; x++)
             {
                 Tile tile = allTiles.Find(t => t.x == x && t.y == y);
-                
+
                 if (tile == null)
                 {
                     Debug.LogError($"❌ Error: Tile at ({x}, {y}) not found!");
                     continue;
                 }
 
-                bool isObstacle = Random.value < 0.2f; // 20% chance to be an obstacle
-                tile.isObstacle = isObstacle; // Correctly mark tile as an obstacle
+                bool isObstacle = Random.value < 0.2f; // 20% chance of being an obstacle
+                tile.isObstacle = isObstacle;
 
                 if (isObstacle)
                 {
@@ -51,6 +50,7 @@ public class ObstacleManager : MonoBehaviour
             }
         }
     }
+
 
 
     void ResetObstacleData()
@@ -68,14 +68,14 @@ public class ObstacleManager : MonoBehaviour
         List<Tile> allTiles = new List<Tile>(FindObjectsOfType<Tile>());
 
         // Find a random walkable tile (not occupied)
-        Tile spawnTile = allTiles.Find(t => !t.isObstacle && !occupiedTiles.Contains(t.transform.position));
+        Tile spawnTile = allTiles.Find(t => !t.isObstacle);
 
         if (spawnTile != null)
         {
             Vector3 spawnPosition = spawnTile.transform.position;
             GameObject playerInstance = Instantiate(HumanMale_Character_Free, spawnPosition, Quaternion.identity);
-            occupiedTiles.Add(spawnPosition); // Mark tile as occupied
-            playerInstance.tag = "Player"; // Ensure the player has a "Player" tag
+            playerInstance.tag = "Player"; 
+            occupiedTiles.Add(spawnPosition);
             Debug.Log($"✅ Player spawned at ({spawnTile.x}, {spawnTile.y})");
         }
         else
@@ -84,19 +84,18 @@ public class ObstacleManager : MonoBehaviour
         }
     }
 
-
     void SpawnEnemy()
     {
         List<Tile> allTiles = new List<Tile>(FindObjectsOfType<Tile>());
 
-        // Find a random walkable tile (not occupied by obstacles or the player)
+        // Find a random walkable tile (not occupied by player)
         Tile spawnTile = allTiles.Find(t => !t.isObstacle && !occupiedTiles.Contains(t.transform.position));
 
         if (spawnTile != null)
         {
             Vector3 spawnPosition = spawnTile.transform.position;
             Instantiate(HumanMale_Character_Free_Enemy, spawnPosition, Quaternion.identity);
-            occupiedTiles.Add(spawnPosition); // Mark tile as occupied
+            occupiedTiles.Add(spawnPosition);
             Debug.Log($"✅ Enemy spawned at ({spawnTile.x}, {spawnTile.y})");
         }
         else
@@ -104,7 +103,4 @@ public class ObstacleManager : MonoBehaviour
             Debug.LogError("❌ Error: No valid tile found for Enemy Spawn!");
         }
     }
-
-
-
 }

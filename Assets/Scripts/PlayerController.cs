@@ -12,6 +12,10 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
+           if (animator == null)
+            {
+                Debug.LogError("❌ Animator component missing on Player!");
+            }
     }
 
     public void MoveToTile(Tile targetTile, List<Tile> allTiles)
@@ -43,25 +47,37 @@ public class PlayerController : MonoBehaviour
     IEnumerator FollowPath()
     {
         isMoving = true;
-        animator.SetFloat("Speed", 5f); 
+        animator?.SetBool("Moving", true); //
 
         for (int i = 0; i < currentPath.Count; i++)
         {
             Tile tile = currentPath[i];
 
-            // Rotate the player towards movement direction
+            // ✅ Rotate towards movement direction
             Vector3 direction = (tile.transform.position - transform.position).normalized;
             if (direction != Vector3.zero)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.9f);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.8f);
             }
 
-            transform.position = tile.transform.position;
-            yield return new WaitForSeconds(0.2f);
-        }
+            // ✅ Smooth movement using Lerp
+            Vector3 startPosition = transform.position;
+            Vector3 endPosition = tile.transform.position;
+            float elapsedTime = 0;
+            float moveDuration = 0.5f; // Adjust for smoothness
 
-        animator.SetFloat("Speed", 0f);
+            while (elapsedTime < moveDuration)
+            {
+                transform.position = Vector3.Lerp(startPosition, endPosition, elapsedTime / moveDuration);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            transform.position = endPosition; // Ensure exact position
+        }
         isMoving = false;
+        animator?.SetBool("Moving", false);
     }
+
 }
